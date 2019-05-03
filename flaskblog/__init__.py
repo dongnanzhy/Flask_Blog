@@ -1,4 +1,3 @@
-import os
 from flask import Flask
 # used for sqlite
 from flask_sqlalchemy import SQLAlchemy
@@ -6,11 +5,10 @@ from flask_sqlalchemy import SQLAlchemy
 from flask_bcrypt import Bcrypt
 from flask_login import LoginManager
 from flask_mail import Mail
+from flaskblog.config import Config
 
-app = Flask(__name__)
-## set secret key
-## use python: $ secrets.token_hex() to generate
-app.config['SECRET_KEY'] = '7532f6e85de5608e4051662da59e14005bb5f6f6274f87554dea9f523545ef65'
+
+
 ## sqlite
 ## run in python to create table: $ from flaskblog import db
 ##                                $ db.create_all()
@@ -20,26 +18,40 @@ app.config['SECRET_KEY'] = '7532f6e85de5608e4051662da59e14005bb5f6f6274f87554dea
 ##                             $ User.query.all()
 ## run in python to delete all: $ db.drop_all()
 ##                              $ db.create_all()
-app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///site.db'
-db = SQLAlchemy(app)
+db = SQLAlchemy()
 
 ## for user authentication
-bcrypt = Bcrypt(app)
+bcrypt = Bcrypt()
 
 ## login manager used in models.py
-login_manager = LoginManager(app)
+login_manager = LoginManager()
 ## redirect back to login page if user access some pages before login
-login_manager.login_view = 'login'
+login_manager.login_view = 'users.login'
 ## bootsrap class = info
 login_manager.login_message_category = 'info'
 
 ## auto-email
-app.config['MAIL_SERVER'] = 'smtp.googlemail.com'
-app.config['MAIL_PORT'] = 587
-app.config['MAIL_USE_TLS'] = True
-app.config['MAIL_USERNAME'] = os.environ.get('EMAIL_USER')
-app.config['MAIL_PASSWORD'] = os.environ.get('EMAIL_PASS')
-mail = Mail(app)
+mail = Mail()
 
-## import here to deal with circular import issue
-from flaskblog import routes
+
+def create_app(config_class=Config):
+  app = Flask(__name__)
+  ## import config from Config class
+  app.config.from_object(Config)
+
+  ## init extensions with app
+  db.init_app(app)
+  bcrypt.init_app(app)
+  login_manager.init_app(app)
+  mail.init_app(app)
+
+  ## import here to deal with circular import issue
+  ## use Blueprint to import routes
+  from flaskblog.users.routes import users
+  from flaskblog.posts.routes import posts
+  from flaskblog.main.routes import main
+  app.register_blueprint(users)
+  app.register_blueprint(posts)
+  app.register_blueprint(main)
+
+  return app

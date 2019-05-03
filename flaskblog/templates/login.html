@@ -48,11 +48,11 @@
             </fieldset>
             <div class="form-group">
                 {{ form.submit(class="btn btn-outline-info") }}
+                <small class="text-muted ml-2">
+                        <!-- if no hyperlink, use "#", means dummy link that goes nowhere -->
+                       <a href="{{ url_for('reset_request') }}">Forgot Password?</a>
+                </small>
             </div>
-            <small class="text-muted ml-2">
-                 <!-- TODO: '#'' means dummy link that goes nowhere -->
-                <a href="#">Forgot Password?</a>
-            </small>
         </form>
     </div>
     <div class="border-top pt-3">
